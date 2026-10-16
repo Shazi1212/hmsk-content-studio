@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+/*
+ * Editorial theme, light: warm white canvas, white cards, near-black text, gold accent.
+ * The token names are role names kept from the original dark theme: `ink` is the page background, `ink-2` cards and
+ * inputs, `ink-3` hover and selected surfaces, `paper` the primary text colour. `gold` is for fills (buttons, dots);
+ * `gold-ink` is the darker amber used when gold has to be readable as text on white. Text colours meet 4.5:1 on white.
+ */
+@theme {
+  --color-ink: #f7f6f2;
+  --color-ink-2: #ffffff;
+  --color-ink-3: #efede7;
+  --color-paper: #17160f;
+  --color-muted: #5e5c54;
+  --color-faint: #77746b;
+  --color-gold: #f5b720;
+  --color-gold-2: #e5a70c;
+  --color-gold-ink: #935f00;
+  --color-subtle: #e4e1d8;
+  --color-line: #cfcabd;
+  --color-danger: #c93b28;
+  --color-success: #177a4f;
+  --color-warn: #935f00;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(245, 183, 32, 0.35);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #cfcabd;
+  border-radius: 999px;
+  border: 2px solid var(--color-ink);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #b5b0a2;
+}
+
+/* Form controls: shared look for native selects, inputs and textareas. */
+.ctl {
+  width: 100%;
+  background: var(--color-ink-2);
+  color: var(--color-paper);
+  border: 1px solid var(--color-subtle);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.ctl:hover:not(:disabled) {
+  border-color: var(--color-line);
+}
+.ctl:focus-visible {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(245, 183, 32, 0.28);
+}
+.ctl:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+select.ctl {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235e5c54' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+select.ctl option {
+  background: var(--color-ink-2);
+  color: var(--color-paper);
+}
+select.ctl option:disabled {
+  color: var(--color-faint);
+}
+textarea.ctl {
+  resize: vertical;
+  min-height: 5.5rem;
+  font-family: var(--font-sans);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-subtle);
+  background: var(--color-ink-2);
+  color: var(--color-paper);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.5rem 0.85rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease;
+}
+.btn:hover:not(:disabled) {
+  background: var(--color-ink-3);
+  border-color: var(--color-line);
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 183, 32, 0.35);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-paper);
+  font-weight: 600;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-gold-2);
+  border-color: var(--color-gold-2);
+}
+.btn-danger {
+  color: var(--color-danger);
+}
+.btn-danger:hover:not(:disabled) {
+  border-color: rgba(201, 59, 40, 0.45);
+}
+.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+}
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-muted);
+}
+.btn-ghost:hover:not(:disabled) {
+  color: var(--color-paper);
+  background: var(--color-ink-3);
+  border-color: transparent;
+}
+
+/* Cards. min-width:0 keeps wide children (tables, media) scrolling inside the card instead of stretching grid columns. */
+.card {
+  min-width: 0;
+  background: var(--color-ink-2);
+  border: 1px solid var(--color-subtle);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(23, 22, 15, 0.04);
+}
+
+/* Section labels */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Preformatted content blocks (scripts, captions) */
+.prose-block {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--color-paper);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  border: 2px solid rgba(23, 22, 15, 0.15);
+  border-top-color: currentColor;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.toast-in {
+  animation: toast-in 160ms ease-out;
+}

@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// One brand/account we create content for. Created and edited in the app (Brands tab) or seeded from data/brands.ts.
+model Brand {
+  id          String               @id @default(cuid())
+  slug        String               @unique // url-safe id, e.g. northwind-coffee
+  name        String
+  tagline     String?
+  description String               @db.Text // what the brand is, product/service, market, positioning (facts only)
+  websiteUrl  String?
+  languages   String[]             @default([]) // e.g. ["de","en"]
+  platforms   String[]             @default([]) // e.g. ["instagram","tiktok","linkedin"]
+  pillars     String[]             @default([]) // observed content pillars (dropdown source)
+  audience    String               @db.Text // observed + inferred audience notes
+  voice       String               @db.Text // brand voice rules, words used/avoided, register
+  visual      String               @db.Text // visual identity rules (colors, type, photography)
+  offers      String               @db.Text // products, prices, CTAs, links that may be referenced (source of truth)
+  guardrails  String               @db.Text // claims never to make, compliance notes, known inconsistencies to avoid
+  categoryRules    String           @default("") @db.Text // category, default register and extra writing rules for the strategist prompt
+  forbiddenTerms   String[]         @default([]) // exact strings the lint flags and the compliance review removes
+  claimTerms       String[]         @default([]) // words flagged for a human claim check (e.g. "cures", "boost")
+  claimSensitive   Boolean          @default(false) // regulated product (supplement, cosmetics ...): the review also hunts health/effect claims
+  complianceReview Boolean          @default(true) // run the second-pass compliance review after each generation
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  references  ReferencePost[]
+  generations Generation[]
+  ideaBatches IdeaBatch[]
+  connections PlatformConnection[]
+  assets      BrandAsset[]
+}
+
+/// One historical post from the research datasets (or an approved generation promoted to reference).
+model ReferencePost {
+  id                   String   @id @default(cuid())
+  brandId              String
+  brand                Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  platform             String // instagram | tiktok | linkedin | linkedin-showcase | linkedin-founder | ...
+  postUrl              String
+  date                 String? // as captured (ISO date or relative)
+  format               String?
+  pillar               String?
+  topic                String?
+  product              String?  @db.Text
+  hook                 String?  @db.Text
+  hookType             String?
+  mainMessage          String?  @db.Text
+  visualConcept        String?  @db.Text
+  visualStyle          String?
+  colors               String?
+  typography           String?
+  people               String?
+  productPlacement     String?
+  captionStyle         String?
+  captionStructure     String?  @db.Text
+  cta                  String?  @db.Text
+  ctaType              String?
+  views                String?
+  likes                String?
+  comments             String?
+  shares               String?
+  saves                String?
+  engagementIndicators String?  @db.Text
+  performanceLevel     String?
+  performanceEvidence  String?  @db.Text
+  audienceReaction     String?  @db.Text
+  trendReference       String?
+  storytelling         String?
+  emotionalDriver      String?
+  contentMechanism     String?  @db.Text
+  replicability        String?  @db.Text
+  observations         String?  @db.Text
+  confidence           String?
+  sourceEvidence       String?
+  source               String   @default("seed") // dataset origin or "approved-generation"
+  searchText           String   @db.Text // lowercased concat of hook/topic/message/cta for keyword retrieval
+  raw                  Json?
+  createdAt            DateTime @default(now())
+
+  @@unique([postUrl, platform, hook])
+  @@index([brandId, platform])
+  @@index([brandId, pillar])
+  @@index([performanceLevel])
+}
+
+/// One content-pipeline run (brief -> script -> optional audio/video/image). Saved only when the user approves,
+/// except that drafts can be persisted explicitly for later reference.
+model Generation {
+  id              String    @id @default(cuid())
+  brandId         String
+  brand           Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  platform        String
+  postType        String
+  status          String    @default("draft") // draft | approved | rejected
+  brief           Json // every dropdown/free-text selection that produced this run
+  systemPrompt    String    @db.Text
+  userPrompt      String    @db.Text
+  provider        String // text provider id used (local | gemini | anthropic | openai)
+  model           String?
+  output          Json // structured result (hook, script, caption, shots, cta, hashtags, rationale, ...)
+  outputText      String    @db.Text // flattened human-readable version (also used for repetition checks)
+  referenceIds    String[]  @default([]) // ReferencePost ids shown to the model
+  priorGenIds     String[]  @default([]) // approved Generation ids shown to the model to avoid repetition
+  audioUrl        String?
+  audioProvider   String?
+  videoUrl        String?
+  videoProvider   String?
+  imageUrl        String?
+  imageUrls       String? // JSON array of hosted key-visual URLs in slide order (carousels); imageUrl stays the first
+  imageProvider   String?
+  score           Int? // model self-critique 1-10
+  inputTokens     Int? // prompt tokens summed over the first attempt and any retry (cache reads included)
+  outputTokens    Int? // completion tokens summed over the first attempt and any retry
+  cacheReadTokens Int? // part of inputTokens served from the provider's prompt cache
+  notes           String?   @db.Text // human notes at approval time
+  approvedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([brandId, status])
+  @@index([brandId, platform, postType])
+}
+
+/// Failed-login counter per client IP: brute-force protection for the single shared password. Rows are
+/// short-lived (cleared on a successful login, stale rows purged opportunistically) and work across serverless
+/// invocations where an in-memory counter would not.
+model LoginAttempt {
+  ip          String    @id
+  failures    Int       @default(0)
+  windowStart DateTime  @default(now())
+  lockedUntil DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+/// One batch of brainstormed post ideas (Ideas tab), written by the Ideas model. Gives the tab its history and
+/// the weekly idea bank.
+model IdeaBatch {
+  id         String   @id @default(cuid())
+  brandId    String
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  source     String   @default("manual") // manual | weekly
+  params     Json // {platform, pillar, goal, count, direction, language}
+  ideas      Json // parsed and linted: [{hook, angle, format, why, flags[]}]
+  model      String? // model name reported by the server
+  durationMs Int?
+  createdAt  DateTime @default(now())
+
+  @@index([brandId, createdAt])
+}
+
+/// One connected social account (official API, OAuth). Tokens are encrypted by lib/crypto.ts.
+model PlatformConnection {
+  id            String    @id @default(cuid())
+  brandId       String
+  brand         Brand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  platform      String // instagram | tiktok
+  externalId    String // Instagram user id, TikTok open_id
+  handle        String?
+  accessToken   String    @db.Text // encrypted
+  refreshToken  String?   @db.Text // encrypted
+  expiresAt     DateTime?
+  scopes        String[]  @default([])
+  status        String    @default("ok") // ok | needs_reconnect | error
+  lastSyncAt    DateTime?
+  lastSyncCount Int?
+  lastError     String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([brandId, platform, externalId])
+  @@index([platform, status])
+}
+
+/// One attempt-tracked execution of a recurring background task (weekly idea bank, weekly platform sync). The unique
+/// (task, period) row is the lock: the process that inserts it first runs the task for that period (lib/scheduler.ts).
+model ScheduledRun {
+  id         String    @id @default(cuid())
+  task       String // ideas-weekly | sync-weekly
+  period     String // ISO week, e.g. 2026-W40
+  status     String    @default("running") // running | done | failed
+  attempts   Int       @default(1)
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  detail     Json?
+  error      String?   @db.Text
+
+  @@unique([task, period])
+}
+
+/// A generated key visual or voice-over, hosted by this app itself (lib/media.ts): bytes in the database, served publicly
+/// at /api/media/{id}. The random id is the capability: Higgsfield has to fetch the start image without a session.
+/// Unreferenced rows older than 30 days are purged opportunistically.
+model MediaAsset {
+  id        String   @id // 24 random url-safe characters (144 bits)
+  kind      String // image | audio
+  mime      String
+  bytes     Bytes
+  size      Int
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/// One reference image of a brand (logo, product photo, packaging, person, mood) that the image model receives as a reference:
+/// by default (isDefault) or when picked per generation. The bytes live in MediaAsset (mediaId). Rows with a sourceUrl were
+/// imported from data/brands.ts referenceImages (source "website" in the API); deleting one sets hidden so it is not re-imported.
+/// Uploaded rows are deleted together with their MediaAsset (lib/references.ts, lib/brand-assets.ts).
+model BrandAsset {
+  id        String   @id @default(cuid())
+  brandId   String
+  brand     Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  mediaId   String // MediaAsset id holding the bytes (never purged while a BrandAsset points at it)
+  kind      String // product | packaging | logo | person | mood | other
+  label     String
+  isDefault Boolean  @default(true)
+  hidden    Boolean  @default(false)
+  position  Int      @default(0)
+  sourceUrl String? // set when imported from data/brands.ts referenceImages
+  mime      String
+  size      Int
+  createdAt DateTime @default(now())
+
+  @@unique([brandId, sourceUrl])
+  @@index([brandId])
+}

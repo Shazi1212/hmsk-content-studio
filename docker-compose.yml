@@ -1,0 +1,44 @@
+# Content Studio + PostgreSQL. Usage:
+#   cp .env.example .env    # set APP_PASSWORD (16+ characters), AUTH_SECRET and POSTGRES_PASSWORD, plus any API keys
+#   docker compose up -d --build
+# Then open http://localhost:3000 (or the PORT you set). Data lives in the "pgdata" volume.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: content_studio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: content_studio
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U content_studio -d content_studio"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    # Built from this folder. To deploy without building, publish an image and set CONTENT_STUDIO_IMAGE to it.
+    image: ${CONTENT_STUDIO_IMAGE:-content-studio:local}
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://content_studio:${POSTGRES_PASSWORD:-change-me}@db:5432/content_studio?schema=public
+      APP_PASSWORD: ${APP_PASSWORD:?Set APP_PASSWORD (at least 16 characters) in .env}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET (random, 32+ characters) in .env}
+      PORT: "3000" # inside the container; the host port is ${PORT} below
+    ports:
+      - "${PORT:-3000}:3000"
+    # Lets LOCAL_LLM_BASE_URL reach a model server on the Docker host: http://host.docker.internal:1234/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata:
