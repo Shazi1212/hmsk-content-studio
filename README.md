@@ -90,16 +90,6 @@ Notes:
 - Generated images and voice-overs are stored in the database and served at `/api/media/<random id>` without login (the video provider has to fetch the start image). Treat those links like unlisted links.
 - Long generations stream a keep-alive while the model works; behind a reverse proxy, allow responses of a few minutes.
 
-## Deploy to Hostinger
-
-[![Deploy to Hostinger](https://assets.hostinger.com/vps/deploy.svg)](https://www.hostinger.com/docker-hosting?compose_url=RAW_COMPOSE_URL&REFERRALCODE=REFERRAL_CODE)
-
-<!-- TODO before publishing: replace RAW_COMPOSE_URL with the URL-encoded raw URL of docker-compose.yml in the public repository
-     and REFERRAL_CODE with the referral code. A one-click deploy cannot build from a local folder, so also publish a container
-     image (e.g. to ghcr.io) and set CONTENT_STUDIO_IMAGE to it, or point `build:` at the repository's git URL. -->
-
-Set `APP_PASSWORD`, `AUTH_SECRET` and `POSTGRES_PASSWORD` (and any API keys) as environment variables of the deployment.
-
 ## Development
 
 - Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Prisma 6, PostgreSQL.
