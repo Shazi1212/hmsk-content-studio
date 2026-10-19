@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
   try {
     const brands = await prisma.brand.findMany({
       orderBy: { createdAt: "asc" },
-      select: { slug: true, name: true, tagline: true, pillars: true, platforms: true, languages: true, audience: true },
+      select: { slug: true, name: true, tagline: true, pillars: true, platforms: true, languages: true, audience: true, bannedPhrases: true, aiPhraseCheck: true },
     });
     const providers = providerStatus();
     const productPhotos = await productReferenceCounts(brands.map((b) => b.slug));
@@ -131,6 +131,9 @@ export async function GET(req: NextRequest) {
         // How many default product / packaging reference images key visuals and video start frames use (0 = none), counting
         // built-in website images that are not imported yet; nothing is fetched here. The URLs stay server-side.
         productReferenceCount: productPhotos[b.slug] ?? 0,
+        // Language safety settings, so drafts reopened from history are checked the same way as fresh ones.
+        bannedPhrases: b.bannedPhrases,
+        aiPhraseCheck: b.aiPhraseCheck,
       })),
       options: OPTION_GROUPS,
       providers,

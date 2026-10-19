@@ -17,6 +17,7 @@ import {
 import { buildSystemPrompt, buildUserPrompt, joinSystemPrompt, parseGenerationOutput, type ParseOptions, type ParseSuccess } from "@/lib/prompt";
 import { priorVariants, repetitionReport, selectReferences } from "@/lib/retrieval";
 import { describeDefaultReferences } from "@/lib/references";
+import { checkLanguageSafety } from "@/lib/language-safety";
 import { FIXABLE_FINDINGS, complianceEnabled, reviewCompliance, type ComplianceReview } from "@/lib/compliance";
 import {
   BriefSchema,
@@ -85,6 +86,8 @@ export type RunGenerationResult = {
   retrievalNotes: string[];
   /** Parser lint (PROMPT-SPEC E.8): compliance and format findings, non-blocking. Codes such as `health_claim_term:…`. */
   lint: string[];
+  /** Language safety warnings (lib/language-safety.ts), non-blocking: mixed language, banned / AI-sounding phrases, hashtag and emoji limits. */
+  safety: string[];
   /** JSON repairs the parser had to apply (e.g. `closed_truncated_json`, `trailing_commas`). */
   repaired: string[];
   /** Pipeline-level notices: retries and truncated output. */
@@ -342,6 +345,14 @@ export async function runGeneration(brief: Brief): Promise<RunGenerationResult> 
   const model = chosen.res.model;
   const outputText = flattenOutput(output, brief);
   const repetition = repetitionReport(output, priorApproved, references);
+  const safety = checkLanguageSafety(output, {
+    language: brief.language,
+    platform: brief.platform,
+    postType: brief.postType,
+    tone: brief.tone,
+    bannedPhrases: brand.bannedPhrases,
+    aiPhraseCheck: brand.aiPhraseCheck,
+  });
   const score = Number.isFinite(output.selfReview.score) ? Math.max(1, Math.min(10, Math.round(output.selfReview.score))) : null;
 
   const draft: DraftGeneration = {
@@ -373,7 +384,7 @@ export async function runGeneration(brief: Brief): Promise<RunGenerationResult> 
     approvedAt: null,
   };
 
-  return { draft, usage, durationMs: Date.now() - startedAt, references, priorApproved, repetition, retrievalNotes: notes, lint, repaired, warnings, raw };
+  return { draft, usage, durationMs: Date.now() - startedAt, references, priorApproved, repetition, retrievalNotes: notes, lint, safety, repaired, warnings, raw };
 }
 
 // ---------------------------------------------------------------------------------------------------------------

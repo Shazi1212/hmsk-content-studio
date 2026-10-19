@@ -38,6 +38,20 @@ const LINT_LABELS: Array<[RegExp, string]> = [
   [/^retried_/, "Retry"],
 ];
 
+const SAFETY_LABELS: Array<[RegExp, string]> = [
+  [/^mixed_language/, "Language"],
+  [/^banned_phrase/, "Banned phrase"],
+  [/^ai_phrase/, "AI phrase"],
+  [/^hashtag_limit/, "Hashtags"],
+  [/^emoji_limit/, "Emoji"],
+];
+
+/** Chip label and readable text of a language safety warning (`code:detail (vN)` → label + `detail (vN)`). */
+function safetyParts(w: string): { label: string; text: string } {
+  const label = SAFETY_LABELS.find(([re]) => re.test(w))?.[1] ?? "Language";
+  return { label, text: w.replace(/^[a-z_]+:/, "") };
+}
+
 function lintLabel(code: string): string {
   for (const [re, label] of LINT_LABELS) if (re.test(code)) return label;
   return "Format";
@@ -50,6 +64,7 @@ export function StrategyCard({
   repetition,
   retrievalNotes = [],
   lint = [],
+  safety = [],
   warnings = [],
   repaired = [],
 }: {
@@ -59,6 +74,7 @@ export function StrategyCard({
   repetition: Repetition;
   retrievalNotes?: string[];
   lint?: string[];
+  safety?: string[];
   warnings?: string[];
   repaired?: string[];
 }) {
@@ -152,6 +168,28 @@ export function StrategyCard({
           ) : null}
         </div>
       ) : null}
+
+      <div className={`mt-3 rounded-lg border px-3 py-2.5 ${safety.length ? "border-warn/50 bg-warn/10" : "border-subtle bg-ink"}`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-sm font-medium">
+            Language safety: {safety.length ? `${safety.length} warning${safety.length > 1 ? "s" : ""}` : "clean"}
+          </div>
+          <span className="text-[11px] text-muted">language mix · phrases · hashtags · emoji · never blocks</span>
+        </div>
+        {safety.length ? (
+          <ul className="mt-2 grid gap-1 text-xs text-paper/85">
+            {safety.map((w, i) => {
+              const { label, text } = safetyParts(w);
+              return (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="mt-px shrink-0 rounded-full border border-subtle px-1.5 py-px text-[10px] uppercase tracking-wide text-muted">{label}</span>
+                  <span className="min-w-0 break-words">{text}</span>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </div>
 
       {references.length || priorApproved.length ? (
         <div className="mt-4 grid gap-3 sm:grid-cols-2">

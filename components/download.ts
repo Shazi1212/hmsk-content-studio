@@ -44,6 +44,7 @@ export function downloadJson(result: GenerateResponse, brief: Brief, extra: { sa
     priorApproved: result.priorApproved,
     repetition: result.repetition,
     lint: result.lint ?? [],
+    safety: result.safety ?? [],
     warnings: result.warnings ?? [],
     repaired: result.repaired ?? [],
     media: {
@@ -135,6 +136,7 @@ export function toMarkdown(result: GenerateResponse, brief: Brief, extra: { save
   if (result.repetition.warnings.length) md += list(`Repetition warnings (max similarity ${(result.repetition.maxSimilarity * 100).toFixed(0)}%)`, result.repetition.warnings);
   const quality = [...(result.warnings ?? []), ...(result.lint ?? [])];
   if (quality.length) md += list("Quality lint (non-blocking, review before publishing)", quality);
+  if (result.safety?.length) md += list("Language safety (non-blocking)", result.safety);
   if (result.repaired?.length) md += section("Parser repairs", result.repaired.join(", "));
 
   o.variants.forEach((v, i) => {

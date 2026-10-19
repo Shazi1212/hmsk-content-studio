@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BriefSchema, type Brief } from "@/lib/types";
 import type { Idea } from "@/lib/ideas/types";
+import { checkLanguageSafety } from "@/lib/language-safety";
 import { ApiError, api, toApiError } from "./api";
 import { AssetsView } from "./AssetsView";
 import { BrandAssetsProvider } from "./BrandAssets";
@@ -439,7 +440,22 @@ export default function ContentStudio() {
         notes: item.notes ?? null,
         approvedAt: item.approvedAt ?? null,
       };
-      setResult({ draft, references: [], priorApproved: [], repetition: { warnings: [], maxSimilarity: 0 } });
+      // The language safety check is pure, so a reopened draft is checked again with the brand's current settings.
+      const brandOpt = opts?.brands.find((b) => b.slug === itemBrief.brandSlug);
+      let safety: string[] = [];
+      try {
+        safety = checkLanguageSafety(item.output, {
+          language: itemBrief.language,
+          platform: itemBrief.platform,
+          postType: itemBrief.postType,
+          tone: itemBrief.tone,
+          bannedPhrases: brandOpt?.bannedPhrases ?? [],
+          aiPhraseCheck: brandOpt?.aiPhraseCheck ?? true,
+        });
+      } catch {
+        // Rows saved by older versions may miss fields; the check is advisory, so skip it rather than fail the reopen.
+      }
+      setResult({ draft, references: [], priorApproved: [], repetition: { warnings: [], maxSimilarity: 0 }, safety });
       setResultKey((k) => k + 1);
       setActiveVariant(0);
       setSavedId(item.id);

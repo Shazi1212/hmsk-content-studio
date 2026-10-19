@@ -9,6 +9,7 @@ More about the tool: <https://hmsk.life/tools/content-studio/>
 - **Brief to finished draft.** Pick brand, platform (Instagram, TikTok, LinkedIn, YouTube, Facebook, X), post type, goal, pillar, hook type, tone, language (English / German) and number of variants. A detailed strategist prompt returns structured output: strategy, hook, script or voice-over, on-screen text, shot list, caption, hashtags, CTA and a self-review.
 - **Bring your own model.** Anthropic, OpenAI, Google Gemini or any OpenAI-compatible server (LM Studio, Ollama, vLLM, OpenRouter). A keyless **Mock** provider produces template drafts so you can try the whole flow for free.
 - **Brands you define.** The Brands tab stores each brand's description, audience, voice, visual identity, offers and guardrails; the model treats them as the only source of facts. Per brand you can switch on a second-pass **compliance review** that checks every draft against the guardrails, plus forbidden strings and claim-check words for the built-in lint.
+- **Language safety.** Every draft gets a deterministic second look, shown as warnings in the review screen (never blocking approval): sentences in the wrong language (English in a German draft or the reverse, single loan words do not count), the brand's own banned phrases, generic AI-sounding phrases (English and German defaults such as "game-changer" or "in der heutigen schnelllebigen Welt"), and more hashtags or emoji in the posted text than the platform allows.
 - **Learns from history.** Each brief is grounded in the brand's reference posts (high and low performers) and previously approved drafts, with a repetition check against earlier hooks.
 - **Optional production.** Voice-over with ElevenLabs, short video with Higgsfield (Kling 3.0, text-to-video or image-to-video) and key visuals with OpenAI or Gemini image models, using the brand's uploaded reference photos (logo, product, packaging, people, mood).
 - **Review and keep.** Approve, save as draft or reject into a Postgres history; download any draft as JSON or Markdown.
@@ -52,6 +53,7 @@ Production: `npm run build`, then `npm run start:prod` (migrate, seed, `next sta
 ## Your own brands and data
 
 1. **Brands tab:** create a brand and fill in description, audience, voice, visual identity, offers (prices, links, CTAs the model may quote) and guardrails (what it must never say). Delete the demo brand when you are done.
+   Optional per brand: forbidden strings and claim-check words (lint), banned phrases and the AI-phrase switch (language safety). Banned phrases are empty by default and matched case-insensitively as whole words.
 2. **Brand assets tab:** upload reference photos (PNG, JPEG or WebP, up to 8 MB). Default images are sent to the image model so key visuals show your real product and logo.
 3. **Reference posts (optional but recommended):** import your past posts with their results so the strategist learns what works for you:
    ```bash
@@ -87,6 +89,7 @@ All settings are environment variables; [.env.example](.env.example) lists every
 
 Notes:
 
+- Language safety limits (`lib/language-safety.ts`): hashtags in the hashtag list plus inline `#tags` in the caption may not exceed the brief's hashtag range maximum (Instagram and Facebook 8, LinkedIn 6, TikTok and YouTube 5, X 1, ads and stories 0, premium-minimal tone 3); emoji in hook, caption and on-screen text at most 5 on Instagram, Facebook and TikTok, 3 on LinkedIn and YouTube, 2 on X. The phrase lists and limits are constants in that file.
 - Generated images and voice-overs are stored in the database and served at `/api/media/<random id>` without login (the video provider has to fetch the start image). Treat those links like unlisted links.
 - Long generations stream a keep-alive while the model works; behind a reverse proxy, allow responses of a few minutes.
 

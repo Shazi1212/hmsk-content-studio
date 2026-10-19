@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
       repetition: result.repetition,
       retrievalNotes: result.retrievalNotes,
       lint: result.lint,
+      safety: result.safety,
       repaired: result.repaired,
       warnings: result.warnings,
       ...(result.raw !== undefined ? { raw: result.raw } : {}),

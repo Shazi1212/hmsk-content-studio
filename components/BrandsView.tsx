@@ -25,6 +25,8 @@ const EMPTY: BrandInput = {
   claimTerms: [],
   claimSensitive: false,
   complianceReview: true,
+  bannedPhrases: [],
+  aiPhraseCheck: true,
 };
 
 const LANGUAGE_CHOICES = [
@@ -51,6 +53,8 @@ function toInput(b: BrandRecord): BrandInput {
     claimTerms: b.claimTerms ?? [],
     claimSensitive: b.claimSensitive ?? false,
     complianceReview: b.complianceReview ?? true,
+    bannedPhrases: b.bannedPhrases ?? [],
+    aiPhraseCheck: b.aiPhraseCheck ?? true,
   };
 }
 
@@ -302,6 +306,13 @@ export function BrandsView({
           <div className="grid gap-3.5 sm:grid-cols-2">
             <ListField key={`forbidden-${formVersion}`} id={id("forbidden")} label="Forbidden strings" hint="One per line, matched exactly. Flagged by the lint and removed by the review." value={form.forbiddenTerms} onChange={(v) => patch({ forbiddenTerms: v })} rows={3} />
             <ListField key={`claims-${formVersion}`} id={id("claims")} label="Claim-check words" hint="One per line, case-insensitive. Flagged for a human look." value={form.claimTerms} onChange={(v) => patch({ claimTerms: v })} rows={3} />
+          </div>
+          <div className="grid gap-3.5 sm:grid-cols-2">
+            <ListField key={`banned-${formVersion}`} id={id("banned")} label="Banned phrases (language safety)" hint="One per line, case-insensitive, whole words. Shown as warnings on the draft; never blocks approval." value={form.bannedPhrases} onChange={(v) => patch({ bannedPhrases: v })} rows={3} />
+            <label className="flex items-start gap-2 self-center text-xs text-paper/85">
+              <input type="checkbox" className="mt-0.5" checked={form.aiPhraseCheck} onChange={(e) => patch({ aiPhraseCheck: e.target.checked })} />
+              <span>Flag generic AI-sounding phrases (“game-changer”, “in der heutigen schnelllebigen Welt” …) in the language safety check.</span>
+            </label>
           </div>
           <label className="flex items-start gap-2 text-xs text-paper/85">
             <input type="checkbox" className="mt-0.5" checked={form.complianceReview} onChange={(e) => patch({ complianceReview: e.target.checked })} />

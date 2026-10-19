@@ -27,6 +27,8 @@ export function demoBrand(overrides: Partial<Brand> = {}): Brand {
     claimTerms: seed.claimTerms ?? [],
     claimSensitive: seed.claimSensitive ?? false,
     complianceReview: seed.complianceReview ?? true,
+    bannedPhrases: seed.bannedPhrases ?? [],
+    aiPhraseCheck: seed.aiPhraseCheck ?? true,
     createdAt: EPOCH,
     updatedAt: EPOCH,
     ...overrides,

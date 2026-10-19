@@ -28,6 +28,8 @@ model Brand {
   claimTerms       String[]         @default([]) // words flagged for a human claim check (e.g. "cures", "boost")
   claimSensitive   Boolean          @default(false) // regulated product (supplement, cosmetics ...): the review also hunts health/effect claims
   complianceReview Boolean          @default(true) // run the second-pass compliance review after each generation
+  bannedPhrases    String[]         @default([]) // phrases the language safety check warns about (case-insensitive, whole words)
+  aiPhraseCheck    Boolean          @default(true) // language safety also flags generic AI-sounding phrases
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   references  ReferencePost[]

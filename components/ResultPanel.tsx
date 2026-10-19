@@ -162,6 +162,7 @@ export function ResultPanel({
         repetition={result.repetition}
         retrievalNotes={result.retrievalNotes}
         lint={result.lint}
+        safety={result.safety}
         warnings={result.warnings}
         repaired={result.repaired}
       />

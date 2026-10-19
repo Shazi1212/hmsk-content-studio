@@ -31,6 +31,8 @@ export type BrandSeed = {
   claimTerms?: string[];
   claimSensitive?: boolean;
   complianceReview?: boolean;
+  bannedPhrases?: string[];
+  aiPhraseCheck?: boolean;
 };
 
 export const BRANDS: BrandSeed[] = [

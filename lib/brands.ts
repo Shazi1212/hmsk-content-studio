@@ -46,6 +46,8 @@ export const BrandInputSchema = z.object({
   claimTerms: list(100, 120).default([]),
   claimSensitive: z.boolean().default(false),
   complianceReview: z.boolean().default(true),
+  bannedPhrases: list(100, 120).default([]),
+  aiPhraseCheck: z.boolean().default(true),
 });
 export type BrandInput = z.infer<typeof BrandInputSchema>;
 

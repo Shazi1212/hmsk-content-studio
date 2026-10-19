@@ -30,6 +30,9 @@ export type BrandOption = {
   audienceSuggestions: string[];
   /** Default product / packaging photos the server sends to the image model for this brand; 0 or absent = none (older servers). */
   productReferenceCount?: number;
+  /** Language safety settings of the brand (absent on older servers). */
+  bannedPhrases?: string[];
+  aiPhraseCheck?: boolean;
 };
 
 export type Voice = { voiceId: string; name: string };
@@ -187,6 +190,8 @@ export type GenerateResponse = {
   retrievalNotes?: string[];
   /** Parser lint codes (compliance + format), non-blocking; `health_claim_term:` / `forbidden_string:` gate approval. */
   lint?: string[];
+  /** Language safety warnings (lib/language-safety.ts): mixed language, banned and AI-sounding phrases, hashtag and emoji limits. Never block. */
+  safety?: string[];
   /** JSON repairs the parser applied. */
   repaired?: string[];
   /** Pipeline notices such as truncated output or a retry. */
@@ -289,6 +294,8 @@ export type BrandInput = {
   claimTerms: string[];
   claimSensitive: boolean;
   complianceReview: boolean;
+  bannedPhrases: string[];
+  aiPhraseCheck: boolean;
 };
 
 /** A brand as GET /api/brands returns it. */
