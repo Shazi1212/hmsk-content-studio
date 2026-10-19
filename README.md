@@ -93,7 +93,7 @@ Notes:
 ## Development
 
 - Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Prisma 6, PostgreSQL.
-- `npm run lint`, `npx tsc --noEmit`, `npm run build` (the build needs only a syntactically valid `DATABASE_URL`).
+- `npm test` (Vitest unit tests in `tests/`: parser, lint, prompts, schemas, repetition and helpers; no network, no database), `npm run lint`, `npx tsc --noEmit`, `npm run build` (the build needs only a syntactically valid `DATABASE_URL`).
 - Prompt engine: `lib/prompt/`; providers: `lib/providers/`; pipeline: `lib/pipeline.ts`; brand settings: `lib/brands.ts`, `components/BrandsView.tsx`; schema: `prisma/schema.prisma`.
 
 ## License
