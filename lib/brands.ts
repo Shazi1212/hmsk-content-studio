@@ -48,6 +48,7 @@ export const BrandInputSchema = z.object({
   complianceReview: z.boolean().default(true),
   bannedPhrases: list(100, 120).default([]),
   aiPhraseCheck: z.boolean().default(true),
+  refreshAfterDays: z.number().int().min(0, "Refresh after: 0 (off) or more days").max(3650).default(180),
 });
 export type BrandInput = z.infer<typeof BrandInputSchema>;
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { ageInDays, DEFAULT_REFRESH_AFTER_DAYS, refreshDue } from "@/lib/similarity";
 import { optionLabel } from "./brief";
 import { formatDate, formatTokens } from "./StrategyCard";
 import type { HistoryFilter } from "./storage";
@@ -53,10 +54,21 @@ export function HistoryDrawer({
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Taken once per mount, so the render stays pure.
+  const [now] = useState(() => new Date());
+
   if (!open) return null;
 
+  const brandOf = (item: HistoryItem) => brands.find((b) => b.slug === item.brandSlug || (b.id !== undefined && b.id === item.brandId));
+  /** Approved pieces older than the brand's refresh window: worth bringing back with updated facts. */
+  const refreshAge = (item: HistoryItem): number | null => {
+    if (item.status !== "approved") return null;
+    const date = new Date(item.approvedAt ?? item.createdAt);
+    return refreshDue(date, now, brandOf(item)?.refreshAfterDays ?? DEFAULT_REFRESH_AFTER_DAYS) ? ageInDays(date, now) : null;
+  };
+
   const brandName = (item: HistoryItem) =>
-    item.brand?.name ?? brands.find((b) => b.slug === item.brandSlug || (b.id !== undefined && b.id === item.brandId))?.name ?? "";
+    item.brand?.name ?? brandOf(item)?.name ?? "";
 
   return (
     <div className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label="Generation history">
@@ -115,6 +127,14 @@ export function HistoryDrawer({
                       <span className="text-muted">{optionLabel("postTypes", item.postType).split(" — ")[0]}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      {refreshAge(item) !== null ? (
+                        <span
+                          className="rounded-full border border-success/40 px-1.5 py-px text-[10px] uppercase tracking-wide text-success"
+                          title={`Approved ${refreshAge(item)} days ago: an evergreen candidate. Reopen it and refresh facts, prices and links before posting it again.`}
+                        >
+                          Refresh due
+                        </span>
+                      ) : null}
                       {typeof item.score === "number" ? <span className="text-[11px] tabular-nums text-muted">{item.score}/10</span> : null}
                       <StatusPill status={item.status} />
                     </div>

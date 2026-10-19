@@ -10,7 +10,7 @@ More about the tool: <https://hmsk.life/tools/content-studio/>
 - **Bring your own model.** Anthropic, OpenAI, Google Gemini or any OpenAI-compatible server (LM Studio, Ollama, vLLM, OpenRouter). A keyless **Mock** provider produces template drafts so you can try the whole flow for free.
 - **Brands you define.** The Brands tab stores each brand's description, audience, voice, visual identity, offers and guardrails; the model treats them as the only source of facts. Per brand you can switch on a second-pass **compliance review** that checks every draft against the guardrails, plus forbidden strings and claim-check words for the built-in lint.
 - **Language safety.** Every draft gets a deterministic second look, shown as warnings in the review screen (never blocking approval): sentences in the wrong language (English in a German draft or the reverse, single loan words do not count), the brand's own banned phrases, generic AI-sounding phrases (English and German defaults such as "game-changer" or "in der heutigen schnelllebigen Welt"), and more hashtags or emoji in the posted text than the platform allows.
-- **Learns from history.** Each brief is grounded in the brand's reference posts (high and low performers) and previously approved drafts, with a repetition check against earlier hooks.
+- **Learns from history.** Each brief is grounded in the brand's reference posts (high and low performers) and previously approved drafts. A repetition check compares every new hook with the brand's approved generations, saved drafts and recent posts using a normalised similarity (case, accents, punctuation and stopwords ignored, light stemming; token and character-trigram Jaccard, warning from 60 %), so reworded repeats are caught too. When the closest match is a published piece older than the brand's refresh window (180 days by default), you get an **evergreen refresh** hint instead of a warning, and such approved posts are marked "Refresh due" in History.
 - **Optional production.** Voice-over with ElevenLabs, short video with Higgsfield (Kling 3.0, text-to-video or image-to-video) and key visuals with OpenAI or Gemini image models, using the brand's uploaded reference photos (logo, product, packaging, people, mood).
 - **Review and keep.** Approve, save as draft or reject into a Postgres history; download any draft as JSON or Markdown.
 - Also included: an Ideas tab for brainstorming hooks with an OpenAI-compatible model, a Research view of the reference posts, and optional Instagram / TikTok OAuth sync of your own accounts' posts and numbers ([docs/CONNECTORS.md](docs/CONNECTORS.md)).
@@ -53,7 +53,7 @@ Production: `npm run build`, then `npm run start:prod` (migrate, seed, `next sta
 ## Your own brands and data
 
 1. **Brands tab:** create a brand and fill in description, audience, voice, visual identity, offers (prices, links, CTAs the model may quote) and guardrails (what it must never say). Delete the demo brand when you are done.
-   Optional per brand: forbidden strings and claim-check words (lint), banned phrases and the AI-phrase switch (language safety). Banned phrases are empty by default and matched case-insensitively as whole words.
+   Optional per brand: forbidden strings and claim-check words (lint), banned phrases and the AI-phrase switch (language safety), and the evergreen refresh window in days (0 switches it off). Banned phrases are empty by default and matched case-insensitively as whole words.
 2. **Brand assets tab:** upload reference photos (PNG, JPEG or WebP, up to 8 MB). Default images are sent to the image model so key visuals show your real product and logo.
 3. **Reference posts (optional but recommended):** import your past posts with their results so the strategist learns what works for you:
    ```bash
@@ -96,7 +96,7 @@ Notes:
 ## Development
 
 - Stack: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Prisma 6, PostgreSQL.
-- `npm test` (Vitest unit tests in `tests/`: parser, lint, prompts, schemas, repetition and helpers; no network, no database), `npm run lint`, `npx tsc --noEmit`, `npm run build` (the build needs only a syntactically valid `DATABASE_URL`).
+- `npm test` (Vitest unit tests in `tests/`: parser, lint, prompts, schemas, language safety, hook similarity and repetition, helpers; no network, no database), `npm run lint`, `npx tsc --noEmit`, `npm run build` (the build needs only a syntactically valid `DATABASE_URL`).
 - Prompt engine: `lib/prompt/`; providers: `lib/providers/`; pipeline: `lib/pipeline.ts`; brand settings: `lib/brands.ts`, `components/BrandsView.tsx`; schema: `prisma/schema.prisma`.
 
 ## License

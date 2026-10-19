@@ -33,6 +33,8 @@ export type BrandOption = {
   /** Language safety settings of the brand (absent on older servers). */
   bannedPhrases?: string[];
   aiPhraseCheck?: boolean;
+  /** Evergreen refresh window in days (0 = off; absent on older servers). */
+  refreshAfterDays?: number;
 };
 
 export type Voice = { voiceId: string; name: string };
@@ -176,7 +178,8 @@ export type ReferenceSummary = {
 
 export type PriorSummary = { id: string; createdAt: string; hook?: string | null };
 
-export type Repetition = { warnings: string[]; maxSimilarity: number };
+/** hints: evergreen-refresh notes (absent on older results). */
+export type Repetition = { warnings: string[]; maxSimilarity: number; hints?: string[] };
 
 export type GenerateResponse = {
   draft: DraftGeneration;
@@ -296,6 +299,7 @@ export type BrandInput = {
   complianceReview: boolean;
   bannedPhrases: string[];
   aiPhraseCheck: boolean;
+  refreshAfterDays: number;
 };
 
 /** A brand as GET /api/brands returns it. */

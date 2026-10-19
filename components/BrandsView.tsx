@@ -7,6 +7,13 @@ import type { BrandInput, BrandRecord, ToastKind } from "./types";
 import { ErrorBanner } from "./ui/ErrorBanner";
 import { Field, Fieldset, Spinner, TextArea, TextInput } from "./ui/Field";
 
+/** Whole days 0..3650 from a number field; anything else keeps the previous value. */
+function parseDays(raw: string, previous: number): number {
+  if (raw.trim() === "") return 0;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) ? Math.max(0, Math.min(3650, n)) : previous;
+}
+
 const EMPTY: BrandInput = {
   name: "",
   tagline: "",
@@ -27,6 +34,7 @@ const EMPTY: BrandInput = {
   complianceReview: true,
   bannedPhrases: [],
   aiPhraseCheck: true,
+  refreshAfterDays: 180,
 };
 
 const LANGUAGE_CHOICES = [
@@ -55,6 +63,7 @@ function toInput(b: BrandRecord): BrandInput {
     complianceReview: b.complianceReview ?? true,
     bannedPhrases: b.bannedPhrases ?? [],
     aiPhraseCheck: b.aiPhraseCheck ?? true,
+    refreshAfterDays: b.refreshAfterDays ?? 180,
   };
 }
 
@@ -314,6 +323,9 @@ export function BrandsView({
               <span>Flag generic AI-sounding phrases (“game-changer”, “in der heutigen schnelllebigen Welt” …) in the language safety check.</span>
             </label>
           </div>
+          <Field label="Evergreen refresh after (days)" hint="A new hook close to a published piece at least this old gets a refresh hint instead of a repetition warning, and approved posts this old are marked in History. 0 switches it off." htmlFor={id("refresh")}>
+            <TextInput id={id("refresh")} type="number" value={String(form.refreshAfterDays)} onChange={(v) => patch({ refreshAfterDays: parseDays(v, form.refreshAfterDays) })} />
+          </Field>
           <label className="flex items-start gap-2 text-xs text-paper/85">
             <input type="checkbox" className="mt-0.5" checked={form.complianceReview} onChange={(e) => patch({ complianceReview: e.target.checked })} />
             <span>

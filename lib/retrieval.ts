@@ -5,12 +5,17 @@
  * calibrate against (Typical) and avoid (Low), plus the last approved generations so the model does not repeat
  * itself. Pure keyword/token scoring over the seeded research rows: no embeddings, no external services.
  *
- * repetitionReport(): word-shingle (3-gram) Jaccard between the new variants and prior hooks/captions.
+ * repetitionReport(): hook repetition with the normalised similarity of lib/similarity.ts against approved generations, saved drafts
+ * and the brand's posts (with an evergreen-refresh hint for old published pieces), plus word-shingle (3-gram) Jaccard for captions,
+ * reused hook wording and the variants among themselves.
+ *
+ * loadHookHistory(): the brand's recent approved generations, saved drafts and posts for that check (database read).
  */
 import type { Generation, ReferencePost } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { BriefSchema, GenerationOutputSchema, HOOK_TYPES, type Brief, type GenerationOutput, type Variant } from "@/lib/types";
 import { clip } from "@/lib/text";
+import { DEFAULT_REFRESH_AFTER_DAYS, hookRepetition, parsePostDate, refreshDue, type HistoryItem } from "@/lib/similarity";
 
 // ---------------------------------------------------------------------------------------------------------------
 // Tokenisation helpers (shared by retrieval and repetition checks)
@@ -453,13 +458,38 @@ function shortText(s: string, n = 60): string {
   return t.length > n ? `${clip(t, n - 1)}…` : t;
 }
 
+export type Repetition = { warnings: string[]; maxSimilarity: number; hints: string[] };
+
+export type RepetitionOptions = {
+  /** Further earlier pieces of the brand (saved drafts, older approved generations, synced posts), see loadHookHistory(). */
+  history?: HistoryItem[];
+  /** Reference time for ages; passed in so the report stays deterministic. Default: now. */
+  now?: Date;
+  /** Brand setting: published pieces at least this old get an evergreen-refresh hint instead of a repetition warning (0 = off). */
+  refreshAfterDays?: number;
+};
+
+const approvedDate = (gen: Pick<Generation, "approvedAt" | "createdAt">): Date => gen.approvedAt ?? gen.createdAt;
+
+/** Approved generations and posts as HistoryItems for the hook check. */
+export function toHistoryItems(priorApproved: Generation[], references: ReferencePost[]): HistoryItem[] {
+  return [
+    ...priorApproved.flatMap((gen) =>
+      priorVariants(gen).map((pv, i) => ({ id: `${gen.id}#${i}`, source: "approved" as const, hook: pv.hook, date: approvedDate(gen) })),
+    ),
+    ...references.map((post) => ({ id: post.id, source: "post" as const, hook: post.hook ?? "", date: parsePostDate(post.date), url: post.postUrl })),
+  ];
+}
+
 export function repetitionReport(
   output: GenerationOutput,
   priorApproved: Generation[],
   references: ReferencePost[],
-): { warnings: string[]; maxSimilarity: number } {
+  opts: RepetitionOptions = {},
+): Repetition {
   const warnings: string[] = [];
-  let max = 0;
+  const now = opts.now ?? new Date();
+  const refreshAfterDays = opts.refreshAfterDays ?? DEFAULT_REFRESH_AFTER_DAYS;
 
   const variants: Variant[] = output.variants;
   const variantShingles = variants.map((v) => ({
@@ -468,8 +498,14 @@ export function repetitionReport(
     script: shingles(v.script),
   }));
 
-  // 1) Against approved generations (hook↔hook, caption↔caption, and hook contained in prior caption/script).
+  // 0) Hook against hook: normalised similarity over every earlier piece; old published pieces become refresh hints.
+  const hooks = hookRepetition(variants, [...toHistoryItems(priorApproved, references), ...(opts.history ?? [])], { now, refreshAfterDays });
+  warnings.push(...hooks.warnings);
+  let max = hooks.maxSimilarity;
+
+  // 1) Against approved generations: caption↔caption and the hook's wording inside a prior caption or hook.
   priorApproved.forEach((gen) => {
+    if (refreshDue(approvedDate(gen), now, refreshAfterDays)) return; // evergreen: covered by the refresh hint
     const label = generationLabel(gen);
     const prior = priorVariants(gen);
     prior.forEach((pv) => {
@@ -477,34 +513,28 @@ export function repetitionReport(
       const pc = shingles(pv.caption);
       variantShingles.forEach((vs, i) => {
         const n = i + 1;
-        const hookSim = jaccard(vs.hook, ph);
         const capSim = jaccard(vs.caption, pc);
         const hookInPrior = Math.max(containment(vs.hook, pc), containment(vs.hook, ph));
-        const best = Math.max(hookSim, capSim, hookInPrior);
-        max = Math.max(max, best);
-        if (hookSim > WARN_THRESHOLD) warnings.push(`Variant ${n} hook is ${fmt(hookSim)} similar to approved generation ${label}.`);
-        else if (hookInPrior > WARN_THRESHOLD && vs.hook.size > 1)
+        max = Math.max(max, capSim, hookInPrior);
+        if (hookInPrior > WARN_THRESHOLD && vs.hook.size > 1 && !hooks.warnings.some((w) => w.startsWith(`Variant ${n} hook `)))
           warnings.push(`Variant ${n} hook reuses wording from approved generation ${label} (${fmt(hookInPrior)}).`);
         if (capSim > WARN_THRESHOLD) warnings.push(`Variant ${n} caption is ${fmt(capSim)} similar to approved generation ${label}.`);
       });
     });
   });
 
-  // 2) Against reference posts (never copy their hooks).
+  // 2) Against reference posts: their hook must not be pasted into the caption.
   references.forEach((post) => {
     const refHook = post.hook ?? "";
     if (!refHook.trim()) return;
+    if (refreshDue(parsePostDate(post.date), now, refreshAfterDays)) return;
     const rh = shingles(refHook);
     if (rh.size === 0) return;
     variantShingles.forEach((vs, i) => {
       const n = i + 1;
-      const hookSim = jaccard(vs.hook, rh);
       const hookInCaption = containment(rh, vs.caption);
-      const best = Math.max(hookSim, hookInCaption);
-      max = Math.max(max, best);
-      if (hookSim > WARN_THRESHOLD)
-        warnings.push(`Variant ${n} hook is ${fmt(hookSim)} similar to reference post "${shortText(refHook)}" (${post.postUrl}).`);
-      else if (hookInCaption > WARN_THRESHOLD && rh.size > 1)
+      max = Math.max(max, hookInCaption);
+      if (hookInCaption > WARN_THRESHOLD && rh.size > 1)
         warnings.push(`Variant ${n} caption reuses the hook of reference post "${shortText(refHook)}" (${post.postUrl}).`);
     });
   });
@@ -531,5 +561,41 @@ export function repetitionReport(
     else seen.set(key, i);
   });
 
-  return { warnings: [...new Set(warnings)], maxSimilarity: Math.round(max * 100) / 100 };
+  return { warnings: [...new Set(warnings)], maxSimilarity: Math.round(max * 100) / 100, hints: hooks.hints };
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// loadHookHistory
+// ---------------------------------------------------------------------------------------------------------------
+
+/**
+ * The brand's earlier hooks for the repetition check, beyond the few approved generations and references the prompt shows: the latest
+ * approved generations and saved drafts (mock output excluded) and the most recently imported or synced posts.
+ */
+export async function loadHookHistory(brandId: string, limits: { generations?: number; posts?: number } = {}): Promise<HistoryItem[]> {
+  const [gens, posts] = await Promise.all([
+    prisma.generation.findMany({
+      where: { brandId, status: { in: ["approved", "draft"] }, provider: { not: "mock" } },
+      orderBy: { createdAt: "desc" },
+      take: limits.generations ?? 60,
+      select: { id: true, status: true, output: true, outputText: true, approvedAt: true, createdAt: true },
+    }),
+    prisma.referencePost.findMany({
+      where: { brandId, hook: { not: null } },
+      orderBy: { createdAt: "desc" },
+      take: limits.posts ?? 200,
+      select: { id: true, hook: true, date: true, postUrl: true },
+    }),
+  ]);
+  return [
+    ...gens.flatMap((g) =>
+      priorVariants(g).map((pv, i) => ({
+        id: `${g.id}#${i}`,
+        source: g.status === "approved" ? ("approved" as const) : ("draft" as const),
+        hook: pv.hook,
+        date: g.status === "approved" ? (g.approvedAt ?? g.createdAt) : g.createdAt,
+      })),
+    ),
+    ...posts.map((p) => ({ id: p.id, source: "post" as const, hook: p.hook ?? "", date: parsePostDate(p.date), url: p.postUrl })),
+  ];
 }

@@ -80,6 +80,7 @@ export function StrategyCard({
 }) {
   const simPct = Math.round((repetition.maxSimilarity || 0) * 100);
   const hasWarnings = repetition.warnings.length > 0;
+  const hints = repetition.hints ?? [];
   const quality = [...warnings, ...lint];
   const criticalCount = lint.filter((w) => CRITICAL_LINT.test(w)).length;
 
@@ -120,7 +121,7 @@ export function StrategyCard({
       <div className={`mt-4 rounded-lg border px-3 py-2.5 ${hasWarnings ? "border-warn/50 bg-warn/10" : "border-subtle bg-ink"}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="text-sm font-medium">
-            Repetition check: {hasWarnings ? `${repetition.warnings.length} warning${repetition.warnings.length > 1 ? "s" : ""}` : "no overlap with approved posts"}
+            Repetition check: {hasWarnings ? `${repetition.warnings.length} warning${repetition.warnings.length > 1 ? "s" : ""}` : "no overlap with recent posts and drafts"}
           </div>
           <div className="flex items-center gap-2 text-[11px] text-muted">
             <span>max similarity</span>
@@ -134,6 +135,16 @@ export function StrategyCard({
           <ul className="mt-2 grid gap-1 text-xs text-paper/85">
             {repetition.warnings.map((w, i) => (
               <li key={i}>• {w}</li>
+            ))}
+          </ul>
+        ) : null}
+        {hints.length ? (
+          <ul className="mt-2 grid gap-1 text-xs text-paper/85">
+            {hints.map((h, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="mt-px shrink-0 rounded-full border border-success/40 px-1.5 py-px text-[10px] uppercase tracking-wide text-success">Evergreen</span>
+                <span className="min-w-0 break-words">{h.replace(/^Evergreen refresh: (.)/, (_m, c: string) => c.toUpperCase())}</span>
+              </li>
             ))}
           </ul>
         ) : null}

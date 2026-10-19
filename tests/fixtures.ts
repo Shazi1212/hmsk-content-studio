@@ -29,6 +29,7 @@ export function demoBrand(overrides: Partial<Brand> = {}): Brand {
     complianceReview: seed.complianceReview ?? true,
     bannedPhrases: seed.bannedPhrases ?? [],
     aiPhraseCheck: seed.aiPhraseCheck ?? true,
+    refreshAfterDays: seed.refreshAfterDays ?? 180,
     createdAt: EPOCH,
     updatedAt: EPOCH,
     ...overrides,

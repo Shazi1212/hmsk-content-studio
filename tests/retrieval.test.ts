@@ -39,26 +39,55 @@ describe("classifiers", () => {
 });
 
 describe("repetitionReport", () => {
+  // Fixtures are dated 2026-01-01; one month later nothing is old enough for an evergreen refresh.
+  const now = new Date("2026-02-01T00:00:00Z");
+
   it("is clean when nothing overlaps", () => {
-    const r = repetitionReport(output(), [], []);
-    expect(r).toEqual({ warnings: [], maxSimilarity: 0 });
+    expect(repetitionReport(output(), [], [], { now })).toEqual({ warnings: [], maxSimilarity: 0, hints: [] });
   });
 
   it("warns when a hook repeats an approved generation", () => {
     const prior = generation(output([variant({ hook: "Why does fresh coffee taste flat after two weeks?", caption: "Other caption" })]));
-    const r = repetitionReport(output([variant({ caption: "Brand new caption text here" })]), [prior], []);
-    expect(r.warnings.some((w) => w.startsWith("Variant 1 hook is 1.00 similar to approved generation"))).toBe(true);
+    const r = repetitionReport(output([variant({ caption: "Brand new caption text here" })]), [prior], [], { now });
+    expect(r.warnings[0]).toMatch(/^Variant 1 hook is 100% similar to approved generation "Why does fresh coffee/);
     expect(r.maxSimilarity).toBe(1);
   });
 
-  it("warns when a reference hook is copied", () => {
-    const ref = reference({ hook: "Why does fresh coffee taste flat after two weeks?" });
-    const r = repetitionReport(output(), [], [ref]);
-    expect(r.warnings.some((w) => w.includes("similar to reference post"))).toBe(true);
+  it("catches a reworded hook that shares no three-word run", () => {
+    const prior = generation(output([variant({ hook: "Fresh coffee tastes flat after two weeks. Here's why.", caption: "x" })]));
+    const r = repetitionReport(output([variant({ caption: "Brand new caption text here" })]), [prior], [], { now });
+    expect(r.warnings.some((w) => w.startsWith("Variant 1 hook is"))).toBe(true);
+  });
+
+  it("warns when a reference hook is copied, with its link", () => {
+    const ref = reference({ hook: "Why does fresh coffee taste flat after two weeks?", date: "2026-01-20" });
+    const r = repetitionReport(output(), [], [ref], { now });
+    expect(r.warnings[0]).toContain('similar to post "Why does fresh coffee');
+    expect(r.warnings[0]).toContain("https://example.com/p/1");
+  });
+
+  it("checks saved drafts passed as extra history", () => {
+    const r = repetitionReport(output(), [], [], {
+      now,
+      history: [{ id: "d1", source: "draft", hook: "Why fresh coffee tastes flat after two weeks", date: new Date("2026-01-30") }],
+    });
+    expect(r.warnings[0]).toMatch(/similar to saved draft/);
+  });
+
+  it("turns a match with an old published piece into an evergreen hint", () => {
+    const prior = generation(output([variant({ hook: "Why does fresh coffee taste flat after two weeks?", caption: "Fresh caption" })]));
+    const later = new Date("2026-09-01T00:00:00Z");
+    const r = repetitionReport(output([variant({ caption: "Fresh caption" })]), [prior], [], { now: later, refreshAfterDays: 180 });
+    expect(r.warnings).toEqual([]);
+    expect(r.hints).toHaveLength(1);
+    expect(r.hints[0]).toMatch(/^Evergreen refresh: variant 1 revisits approved generation .* from 2026-01-01 \(243 days ago, 100% similar\)/);
+    const off = repetitionReport(output([variant({ caption: "Fresh caption" })]), [prior], [], { now: later, refreshAfterDays: 0 });
+    expect(off.hints).toEqual([]);
+    expect(off.warnings.length).toBeGreaterThan(0);
   });
 
   it("warns about near-identical variants and duplicate hooks", () => {
-    const r = repetitionReport(output([variant(), variant()]), [], []);
+    const r = repetitionReport(output([variant(), variant()]), [], [], { now });
     expect(r.warnings).toContain("Variants 1 and 2 have the same hook.");
     expect(r.warnings.some((w) => w.startsWith("Variants 1 and 2 are too similar"))).toBe(true);
   });

@@ -33,6 +33,7 @@ export type BrandSeed = {
   complianceReview?: boolean;
   bannedPhrases?: string[];
   aiPhraseCheck?: boolean;
+  refreshAfterDays?: number;
 };
 
 export const BRANDS: BrandSeed[] = [

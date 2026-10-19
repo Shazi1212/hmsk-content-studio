@@ -30,6 +30,7 @@ model Brand {
   complianceReview Boolean          @default(true) // run the second-pass compliance review after each generation
   bannedPhrases    String[]         @default([]) // phrases the language safety check warns about (case-insensitive, whole words)
   aiPhraseCheck    Boolean          @default(true) // language safety also flags generic AI-sounding phrases
+  refreshAfterDays Int              @default(180) // published pieces this old get an evergreen-refresh hint instead of a repeat warning (0 = off)
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   references  ReferencePost[]

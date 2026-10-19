@@ -15,9 +15,10 @@ import {
   type TextUsage,
 } from "@/lib/providers";
 import { buildSystemPrompt, buildUserPrompt, joinSystemPrompt, parseGenerationOutput, type ParseOptions, type ParseSuccess } from "@/lib/prompt";
-import { priorVariants, repetitionReport, selectReferences } from "@/lib/retrieval";
+import { loadHookHistory, priorVariants, repetitionReport, selectReferences, type Repetition } from "@/lib/retrieval";
 import { describeDefaultReferences } from "@/lib/references";
 import { checkLanguageSafety } from "@/lib/language-safety";
+import { parsePostDate, refreshDue } from "@/lib/similarity";
 import { FIXABLE_FINDINGS, complianceEnabled, reviewCompliance, type ComplianceReview } from "@/lib/compliance";
 import {
   BriefSchema,
@@ -82,7 +83,7 @@ export type RunGenerationResult = {
   durationMs: number;
   references: ReferencePost[];
   priorApproved: Generation[];
-  repetition: { warnings: string[]; maxSimilarity: number };
+  repetition: Repetition;
   retrievalNotes: string[];
   /** Parser lint (PROMPT-SPEC E.8): compliance and format findings, non-blocking. Codes such as `health_claim_term:…`. */
   lint: string[];
@@ -230,7 +231,8 @@ export async function runGeneration(brief: Brief): Promise<RunGenerationResult> 
   }
 
   const { references, priorApproved, notes } = await selectReferences({ brandId: brand.id, brief });
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
   // Stable (brand) + variable (brief) parts: providers cache the stable prefix; the DB stores the joined text.
   // The brand's default reference images (kind + label, never URLs) go into the brand block; a database hiccup falls back to the built-ins.
   const imageReferences = await describeDefaultReferences(brand.slug).catch((err: unknown) => {
@@ -245,7 +247,11 @@ export async function runGeneration(brief: Brief): Promise<RunGenerationResult> 
   // (health-claim lexicon, forbidden strings, register, mandatory sections, hook overlap with prior hooks).
   const parseOpts: ParseOptions = {
     brief,
-    priorHooks: [...priorApproved.flatMap((g) => priorVariants(g).map((v) => v.hook)), ...references.map((r) => r.hook ?? "")].filter((h) => h.trim()),
+    // Pieces past the brand's evergreen window are refresh candidates, not repeats (see repetitionReport), so the overlap lint skips them.
+    priorHooks: [
+      ...priorApproved.filter((g) => !refreshDue(g.approvedAt ?? g.createdAt, now, brand.refreshAfterDays)).flatMap((g) => priorVariants(g).map((v) => v.hook)),
+      ...references.filter((r) => !refreshDue(parsePostDate(r.date), now, brand.refreshAfterDays)).map((r) => r.hook ?? ""),
+    ].filter((h) => h.trim()),
     brandRules: { forbiddenTerms: brand.forbiddenTerms, claimTerms: brand.claimTerms, claimSensitive: brand.claimSensitive },
   };
   const variantsWanted = Number.parseInt(brief.variants, 10) || 1;
@@ -344,7 +350,12 @@ export async function runGeneration(brief: Brief): Promise<RunGenerationResult> 
   }
   const model = chosen.res.model;
   const outputText = flattenOutput(output, brief);
-  const repetition = repetitionReport(output, priorApproved, references);
+  // Hooks are also checked against saved drafts and older posts than the prompt shows; a database hiccup only narrows the check.
+  const hookHistory = await loadHookHistory(brand.id).catch((err: unknown) => {
+    console.warn(`[pipeline] hook history unavailable: ${err instanceof Error ? err.message : String(err)}`);
+    return [];
+  });
+  const repetition = repetitionReport(output, priorApproved, references, { history: hookHistory, now, refreshAfterDays: brand.refreshAfterDays });
   const safety = checkLanguageSafety(output, {
     language: brief.language,
     platform: brief.platform,

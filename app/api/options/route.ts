@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
   try {
     const brands = await prisma.brand.findMany({
       orderBy: { createdAt: "asc" },
-      select: { slug: true, name: true, tagline: true, pillars: true, platforms: true, languages: true, audience: true, bannedPhrases: true, aiPhraseCheck: true },
+      select: { slug: true, name: true, tagline: true, pillars: true, platforms: true, languages: true, audience: true, bannedPhrases: true, aiPhraseCheck: true, refreshAfterDays: true },
     });
     const providers = providerStatus();
     const productPhotos = await productReferenceCounts(brands.map((b) => b.slug));
@@ -134,6 +134,7 @@ export async function GET(req: NextRequest) {
         // Language safety settings, so drafts reopened from history are checked the same way as fresh ones.
         bannedPhrases: b.bannedPhrases,
         aiPhraseCheck: b.aiPhraseCheck,
+        refreshAfterDays: b.refreshAfterDays,
       })),
       options: OPTION_GROUPS,
       providers,
