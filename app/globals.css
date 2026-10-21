@@ -1,31 +1,42 @@
 @import "tailwindcss";
 
 /*
- * Editorial theme, light: warm white canvas, white cards, near-black text, gold accent.
- * The token names are role names kept from the original dark theme: `ink` is the page background, `ink-2` cards and
- * inputs, `ink-3` hover and selected surfaces, `paper` the primary text colour. `gold` is for fills (buttons, dots);
- * `gold-ink` is the darker amber used when gold has to be readable as text on white. Text colours meet 4.5:1 on white.
+ * hmsk.life Letterpress A1 "Ink Blue" (2026-10-21). The token names are role names kept from the original theme, so the
+ * components did not change: `ink` is the page background (A1 paper), `ink-2` cards and inputs (card), `ink-3` hover and
+ * selected surfaces (paper-2), `paper` the primary text colour (A1 ink). `gold` is the accent for fills and selected
+ * states, `gold-ink` the accent as text, `mark` the light highlight. Text colours meet 4.5:1 on paper, card and paper-2;
+ * `line` (rule-strong) is the 3:1 border for inputs and buttons, `subtle` (rule) only for dividers and card edges.
  */
 @theme {
-  --color-ink: #f7f6f2;
-  --color-ink-2: #ffffff;
-  --color-ink-3: #efede7;
-  --color-paper: #17160f;
-  --color-muted: #5e5c54;
-  --color-faint: #77746b;
-  --color-gold: #f5b720;
-  --color-gold-2: #e5a70c;
-  --color-gold-ink: #935f00;
-  --color-subtle: #e4e1d8;
-  --color-line: #cfcabd;
-  --color-danger: #c93b28;
-  --color-success: #177a4f;
-  --color-warn: #935f00;
+  --color-ink: #eff1f2;
+  --color-ink-2: #f8f9fa;
+  --color-ink-3: #e2e6e9;
+  --color-paper: #151b24;
+  --color-muted: #4a5562;
+  --color-faint: #5a6470;
+  --color-gold: #1e4c8a;
+  --color-gold-2: #163a6b;
+  --color-gold-ink: #1e4c8a;
+  --color-mark: #a8c8f2;
+  --color-tint: #dce6f3;
+  --color-subtle: #cbd2d9;
+  --color-line: #7b8592;
+  --color-danger: #a3262a;
+  --color-success: #2b6440;
+  --color-warn: #7a4e00;
+
+  /* Letterpress radii: 3-6 px; pills stay round */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-sans: var(--font-public-sans), "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-newsreader), "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 
 html {
@@ -42,7 +53,25 @@ body {
 }
 
 ::selection {
-  background: rgba(245, 183, 32, 0.35);
+  background: var(--color-mark);
+  color: var(--color-paper);
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
 }
 
 *::-webkit-scrollbar {
@@ -53,145 +82,162 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: #cfcabd;
+  background: var(--color-subtle);
   border-radius: 999px;
   border: 2px solid var(--color-ink);
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #b5b0a2;
+  background: var(--color-line);
 }
 
-/* Form controls: shared look for native selects, inputs and textareas. */
-.ctl {
-  width: 100%;
-  background: var(--color-ink-2);
-  color: var(--color-paper);
-  border: 1px solid var(--color-subtle);
-  border-radius: 0.5rem;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.875rem;
-  line-height: 1.35;
-  outline: none;
-  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
-}
-.ctl:hover:not(:disabled) {
-  border-color: var(--color-line);
-}
-.ctl:focus-visible {
-  border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(245, 183, 32, 0.28);
-}
-.ctl:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-select.ctl {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 2.25rem;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235e5c54' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-}
-select.ctl option {
-  background: var(--color-ink-2);
-  color: var(--color-paper);
-}
-select.ctl option:disabled {
-  color: var(--color-faint);
-}
-textarea.ctl {
-  resize: vertical;
-  min-height: 5.5rem;
-  font-family: var(--font-sans);
-}
+/* Component classes sit in the components layer so Tailwind utilities (hidden, sm:inline-flex, w-auto ...) override them. */
+@layer components {
+  /* Form controls: shared look for native selects, inputs and textareas. */
+  .ctl {
+    width: 100%;
+    background: var(--color-ink-2);
+    color: var(--color-paper);
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  }
+  .ctl::placeholder {
+    color: var(--color-faint);
+    opacity: 1;
+  }
+  .ctl:hover:not(:disabled) {
+    border-color: var(--color-muted);
+  }
+  .ctl:focus-visible {
+    border-color: var(--color-gold);
+    outline: 2px solid var(--color-gold);
+    outline-offset: 0;
+  }
+  .ctl:disabled {
+    background-color: var(--color-ink-3);
+    color: var(--color-muted);
+    cursor: not-allowed;
+  }
+  select.ctl {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234a5562' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+  }
+  select.ctl option {
+    background: var(--color-ink-2);
+    color: var(--color-paper);
+  }
+  select.ctl option:disabled {
+    color: var(--color-faint);
+  }
+  textarea.ctl {
+    resize: vertical;
+    min-height: 5.5rem;
+    font-family: var(--font-sans);
+  }
 
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--color-subtle);
-  background: var(--color-ink-2);
-  color: var(--color-paper);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  padding: 0.5rem 0.85rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, opacity 120ms ease;
-}
-.btn:hover:not(:disabled) {
-  background: var(--color-ink-3);
-  border-color: var(--color-line);
-}
-.btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(245, 183, 32, 0.35);
-}
-.btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.btn-primary {
-  background: var(--color-gold);
-  border-color: var(--color-gold);
-  color: var(--color-paper);
-  font-weight: 600;
-}
-.btn-primary:hover:not(:disabled) {
-  background: var(--color-gold-2);
-  border-color: var(--color-gold-2);
-}
-.btn-danger {
-  color: var(--color-danger);
-}
-.btn-danger:hover:not(:disabled) {
-  border-color: rgba(201, 59, 40, 0.45);
-}
-.btn-sm {
-  font-size: 0.75rem;
-  padding: 0.3rem 0.6rem;
-}
-.btn-ghost {
-  background: transparent;
-  border-color: transparent;
-  color: var(--color-muted);
-}
-.btn-ghost:hover:not(:disabled) {
-  color: var(--color-paper);
-  background: var(--color-ink-3);
-  border-color: transparent;
-}
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-line);
+    background: var(--color-ink-2);
+    color: var(--color-paper);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.5rem 0.85rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 120ms ease;
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--color-ink-3);
+    border-color: var(--color-muted);
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .btn:focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+  /* disabled stays readable (6:1) instead of fading */
+  .btn:disabled,
+  .btn-primary:disabled,
+  .btn-ghost:disabled {
+    background: var(--color-ink-3);
+    border-color: var(--color-line);
+    color: var(--color-muted);
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--color-gold);
+    border-color: var(--color-gold);
+    color: #ffffff;
+    font-weight: 600;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-gold-2);
+    border-color: var(--color-gold-2);
+  }
+  .btn-danger {
+    color: var(--color-danger);
+  }
+  .btn-danger:hover:not(:disabled) {
+    border-color: var(--color-danger);
+  }
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-muted);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--color-paper);
+    background: var(--color-ink-3);
+    border-color: transparent;
+  }
 
-/* Cards. min-width:0 keeps wide children (tables, media) scrolling inside the card instead of stretching grid columns. */
-.card {
-  min-width: 0;
-  background: var(--color-ink-2);
-  border: 1px solid var(--color-subtle);
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 2px rgba(23, 22, 15, 0.04);
-}
+  /* Cards. min-width:0 keeps wide children (tables, media) scrolling inside the card instead of stretching grid columns. */
+  .card {
+    min-width: 0;
+    background: var(--color-ink-2);
+    border: 1px solid var(--color-subtle);
+    border-radius: 6px;
+    box-shadow: 0 30px 60px -40px rgba(21, 27, 36, 0.4);
+  }
 
-/* Section labels */
-.eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-muted);
-}
+  /* Section labels */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
 
-/* Preformatted content blocks (scripts, captions) */
-.prose-block {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--color-paper);
+  /* Preformatted content blocks (scripts, captions) */
+  .prose-block {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-paper);
+  }
 }
 
 @keyframes spin {
@@ -203,7 +249,7 @@ textarea.ctl {
   width: 0.9rem;
   height: 0.9rem;
   border-radius: 999px;
-  border: 2px solid rgba(23, 22, 15, 0.15);
+  border: 2px solid rgba(21, 27, 36, 0.15);
   border-top-color: currentColor;
   animation: spin 0.8s linear infinite;
 }
@@ -220,4 +266,14 @@ textarea.ctl {
 }
 .toast-in {
   animation: toast-in 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }

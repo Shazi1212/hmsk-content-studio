@@ -86,13 +86,13 @@ export function VariantView({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <div className="eyebrow">Variant {index + 1}</div>
-            <h3 className="mt-0.5 text-base font-semibold tracking-tight">{variant.title || "Untitled"}</h3>
+            <h3 className="mt-0.5 text-lg font-medium">{variant.title || "Untitled"}</h3>
           </div>
           <CopyButton text={fullText} label="Copy everything" className="!border-subtle" />
         </div>
 
         <Section title="Hook" copyText={variant.hook} meta={variant.hookType || undefined}>
-          <p className="text-lg font-semibold leading-snug tracking-tight text-gold-ink">{variant.hook}</p>
+          <p className="font-serif text-xl font-medium leading-snug text-gold-ink">{variant.hook}</p>
         </Section>
 
         {variant.script ? (

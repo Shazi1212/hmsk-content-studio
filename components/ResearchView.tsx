@@ -344,7 +344,7 @@ export function ResearchView({ brands, initialBrandSlug, onToast }: { brands: Br
     <section aria-label="Research data">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div className="min-w-0">
-          <h1 className="text-lg font-semibold tracking-tight">Research data</h1>
+          <h1 className="text-2xl font-medium">Research data</h1>
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
             The posts the strategist learns from when you generate: what each brand published, what worked and what failed. High and Exceptional
             posts are mechanisms to rebuild, Low ones are patterns to avoid. Open a row for the full analysis.

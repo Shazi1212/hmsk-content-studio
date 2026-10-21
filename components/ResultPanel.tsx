@@ -71,7 +71,7 @@ export function ResultPanel({
           {generating ? (
             <>
               <Spinner className="mb-4 !h-6 !w-6 text-gold" />
-              <div className="text-base font-semibold">Briefing the strategist…</div>
+              <div className="font-serif text-xl font-medium">Briefing the strategist…</div>
               <p className="mt-2 max-w-md text-sm text-muted">
                 Pulling {optionLabel("referenceStrategies", pendingBrief.referenceStrategy).toLowerCase()} for {brandName}, building the prompt and waiting for{" "}
                 {optionLabel("textProviders", pendingBrief.textProvider).split(" (")[0]}. Larger briefs and three variants take longer.
@@ -80,7 +80,7 @@ export function ResultPanel({
           ) : (
             <>
               <div className="mb-3 h-2.5 w-2.5 rounded-sm bg-gold" aria-hidden="true" />
-              <div className="text-base font-semibold">Your result appears here</div>
+              <div className="font-serif text-xl font-medium">Your result appears here</div>
               <ol className="mt-3 grid max-w-md gap-1.5 text-left text-sm text-muted">
                 <li>1. Pick the brand, platform and post type. The post types adapt to the platform.</li>
                 <li>2. Set the strategy and voice, then describe the topic as concretely as you can.</li>
@@ -109,7 +109,7 @@ export function ResultPanel({
   return (
     <div className="grid min-w-0 gap-4">
       {generating ? (
-        <div className="flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
+        <div className="flex items-center gap-2 rounded-lg border border-gold/40 bg-tint px-3 py-2 text-sm">
           <Spinner className="text-gold" /> Regenerating… the current result stays visible until the new one arrives.
         </div>
       ) : null}
@@ -177,7 +177,7 @@ export function ResultPanel({
               aria-selected={i === active}
               onClick={() => onVariantChange(i)}
               className={`min-w-0 flex-1 truncate rounded-md px-3 py-1.5 text-sm transition-colors ${
-                i === active ? "bg-ink-3 font-semibold text-paper" : "text-muted hover:text-paper"
+                i === active ? "bg-ink-3 font-semibold text-paper shadow-[inset_0_-2px_0_var(--color-gold)]" : "text-muted hover:text-paper"
               }`}
               title={v.title}
             >

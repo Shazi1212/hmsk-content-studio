@@ -4,14 +4,14 @@ import type { GenerationOutput } from "@/lib/types";
 
 export function SelfReviewCard({ review }: { review: GenerationOutput["selfReview"] }) {
   const score = Math.max(0, Math.min(10, Number(review.score) || 0));
-  const tone = score >= 8 ? "text-success" : score >= 6 ? "text-gold-ink" : "text-danger";
+  const tone = score >= 8 ? "text-success" : score >= 6 ? "text-warn" : "text-danger";
   return (
     <section className="card p-4 sm:p-5">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="eyebrow">Strategist self-review</div>
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-28 overflow-hidden rounded-full bg-subtle" aria-hidden="true">
-            <span className={`block h-full ${score >= 8 ? "bg-success" : score >= 6 ? "bg-gold" : "bg-danger"}`} style={{ width: `${score * 10}%` }} />
+            <span className={`block h-full ${score >= 8 ? "bg-success" : score >= 6 ? "bg-warn" : "bg-danger"}`} style={{ width: `${score * 10}%` }} />
           </span>
           <span className={`text-sm font-semibold tabular-nums ${tone}`}>{score}/10</span>
         </div>

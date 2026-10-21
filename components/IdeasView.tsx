@@ -280,7 +280,7 @@ export function IdeasView({
   return (
     <section aria-label="Ideas">
       <div className="mb-4 min-w-0">
-        <h1 className="text-lg font-semibold tracking-tight">Ideas</h1>
+        <h1 className="text-2xl font-medium">Ideas</h1>
         <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
           Brainstorm post ideas with your own OpenAI-compatible model (IDEAS_LLM_* or LOCAL_LLM_*). Each idea is a hook plus an angle, based on what worked for the
           brand and checked against its guardrails. Pick one and press <strong className="font-semibold text-paper/85">Use in Create</strong> to have the strategist write it.
@@ -334,7 +334,7 @@ export function IdeasView({
               ) : null}
               {status?.configured ? (
                 <p>
-                  <button type="button" className="font-medium text-gold-ink underline-offset-2 hover:underline disabled:opacity-50" onClick={() => void checkConnection()} disabled={probing}>
+                  <button type="button" className="font-medium text-gold-ink underline-offset-2 hover:underline disabled:text-muted" onClick={() => void checkConnection()} disabled={probing}>
                     {probing ? "Checking…" : "Check connection"}
                   </button>
                   {probe ? (
@@ -413,7 +413,7 @@ export function IdeasView({
                 role="tab"
                 aria-selected={historyTab === id}
                 onClick={() => changeHistoryTab(id)}
-                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${historyTab === id ? "bg-ink-3 text-paper" : "text-muted hover:text-paper"}`}
+                className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${historyTab === id ? "bg-ink-3 font-semibold text-paper shadow-[inset_0_-2px_0_var(--color-gold)]" : "text-muted hover:text-paper"}`}
               >
                 {label}
               </button>

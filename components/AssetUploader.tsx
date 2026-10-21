@@ -258,7 +258,7 @@ export function AssetUploader({
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
         }}
         onDrop={onDrop}
-        className={`rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${dragging ? "border-gold bg-gold/10" : "border-line bg-ink-2"}`}
+        className={`rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${dragging ? "border-gold bg-tint" : "border-line bg-ink-2"}`}
       >
         <div className="text-sm font-semibold">Drop photos here</div>
         <p className="mx-auto mt-1 max-w-xl text-xs leading-relaxed text-muted">

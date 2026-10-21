@@ -63,7 +63,7 @@ export function TopBar({
         <div className="flex items-center gap-2.5">
           <span className="h-2.5 w-2.5 rounded-sm bg-gold" aria-hidden="true" />
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-tight">Content</div>
+            <div className="font-serif text-base font-medium">Content</div>
             <div className="text-[10px] uppercase tracking-[0.18em] text-muted">Studio</div>
           </div>
         </div>
@@ -76,7 +76,7 @@ export function TopBar({
               role="tab"
               aria-selected={view === t.id}
               onClick={() => onViewChange(t.id)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${view === t.id ? "bg-ink-3 text-paper" : "text-muted hover:text-paper"}`}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${view === t.id ? "bg-ink-3 font-semibold text-paper shadow-[inset_0_-2px_0_var(--color-gold)]" : "text-muted hover:text-paper"}`}
             >
               {t.label}
             </button>
@@ -132,7 +132,7 @@ export function TopBar({
           />
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <button type="button" className={`btn btn-sm ${historyOpen ? "border-gold/50 text-gold-ink" : ""}`} onClick={onToggleHistory} aria-pressed={historyOpen}>
             History
           </button>

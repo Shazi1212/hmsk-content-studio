@@ -36,7 +36,7 @@ function AssetCard({ asset, onPatch, onDelete }: { asset: BrandAsset; onPatch: (
           ) : (
             <span />
           )}
-          {asset.isDefault ? <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-semibold text-paper">Default</span> : null}
+          {asset.isDefault ? <span className="rounded-full bg-gold px-2 py-0.5 text-[10px] font-semibold text-white">Default</span> : null}
         </div>
       </div>
       <div className="grid gap-2 p-3">
@@ -139,7 +139,7 @@ export function AssetsView({
   return (
     <section aria-label="Brand assets">
       <div className="mb-4 min-w-0">
-        <h1 className="text-lg font-semibold tracking-tight">
+        <h1 className="text-2xl font-medium">
           Brand assets <span className="font-normal text-muted">· {brandName}</span>
         </h1>
         <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">

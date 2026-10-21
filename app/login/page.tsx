@@ -58,11 +58,11 @@ function LoginForm() {
       aria-describedby={error ? "login-error" : undefined}
     >
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.2em] text-gold-ink">
+        <div className="inline-flex items-center gap-2 eyebrow">
           <span className="inline-block h-2 w-2 rounded-sm bg-gold" aria-hidden="true" />
           Content Studio
         </div>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight">Sign in</h1>
+        <h1 className="mt-3 text-3xl font-medium">Sign in</h1>
         <p className="mt-1 text-sm text-muted">Enter the shared password (APP_PASSWORD) to continue.</p>
       </div>
 
@@ -78,7 +78,7 @@ function LoginForm() {
         required
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        className="mt-2 w-full rounded-lg border border-line bg-ink-2 px-3 py-2.5 text-base text-paper outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/30"
+        className="ctl mt-2 !py-2.5 !text-base"
       />
 
       {error && (
@@ -91,7 +91,7 @@ function LoginForm() {
       <button
         type="submit"
         disabled={busy || password.length === 0}
-        className="mt-6 w-full rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-paper transition hover:bg-gold-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn btn-primary mt-6 w-full !py-2.5 !text-sm"
       >
         {busy ? "Signing in…" : "Sign in"}
       </button>

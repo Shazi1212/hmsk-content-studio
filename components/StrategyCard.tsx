@@ -92,7 +92,7 @@ export function StrategyCard({
           <span className="rounded-full border border-subtle px-2 py-0.5 text-[11px] text-muted">Driver: {strategy.emotionalDriver}</span>
         ) : null}
       </div>
-      <h2 className="text-lg font-semibold leading-snug tracking-tight">{strategy.angle}</h2>
+      <h2 className="text-xl font-medium leading-snug">{strategy.angle}</h2>
       {strategy.whyItFits ? <p className="mt-2 text-sm leading-relaxed text-paper/80">{strategy.whyItFits}</p> : null}
 
       {strategy.referencesUsed.length ? (

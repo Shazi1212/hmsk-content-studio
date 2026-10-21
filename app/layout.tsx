@@ -1,11 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+// Self-hosted (OFL, see app/fonts/), Latin subset incl. German umlauts: Public Sans for the interface, Newsreader for headings. No third-party requests.
+const publicSans = localFont({
+  variable: "--font-public-sans",
   display: "swap",
+  src: [
+    { path: "./fonts/publicsans-latin.woff2", weight: "100 900", style: "normal" },
+  ],
+});
+
+const newsreader = localFont({
+  variable: "--font-newsreader",
+  display: "swap",
+  src: [
+    { path: "./fonts/newsreader-latin.woff2", weight: "200 800", style: "normal" },
+    { path: "./fonts/newsreader-italic-latin.woff2", weight: "200 800", style: "italic" },
+  ],
 });
 
 export const metadata: Metadata = {
@@ -16,14 +28,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F7F6F2",
+  themeColor: "#EFF1F2",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${publicSans.variable} ${newsreader.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-ink text-paper">{children}</body>
     </html>
   );
